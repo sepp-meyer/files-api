@@ -1,5 +1,6 @@
 import datetime as dt
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
@@ -25,3 +26,21 @@ class ApiToken(db.Model):
     expires_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=dt.datetime.utcnow)
     last_used_at = db.Column(db.DateTime, nullable=True)
+
+class AdminUser(db.Model):
+    __tablename__ = "admin_users"
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=dt.datetime.utcnow, nullable=False)
+
+    @classmethod
+    def create_or_update(cls, username: str, password: str):
+        user = cls.query.filter_by(username=username).first()
+        if not user:
+            user = cls(username=username, password_hash=generate_password_hash(password))
+            db.session.add(user)
+        else:
+            user.password_hash = generate_password_hash(password)
+        db.session.commit()
+        return user

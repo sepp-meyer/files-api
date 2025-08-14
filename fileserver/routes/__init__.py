@@ -4,4 +4,4 @@ from flask import Blueprint
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')  # << Präfix
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
-from . import admin, api  # noqa: E402,F401
+from . import admin, api, admin_auth  # noqa: E402,F401

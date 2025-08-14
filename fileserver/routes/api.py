@@ -7,6 +7,10 @@ from . import api_bp
 from ..models import File
 from ..utils import require_token, sign_download, verify_signature
 
+@api_bp.get("/healthz")
+def healthz():
+    return jsonify({"status": "ok"}), 200
+
 @api_bp.get("/files")
 @require_token(scopes_required=("read",))
 def api_list():

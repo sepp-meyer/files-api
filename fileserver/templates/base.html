@@ -10,9 +10,15 @@
     <header>
       <h1>{{ title or "Fileserver Admin" }}</h1>
       <nav>
-        <a href="{{ url_for('admin.index') }}">Upload & Dateien</a>
-        <a href="{{ url_for('admin.admin_tokens') }}">API Tokens</a>
-        <a href="{{ url_for('admin.rendering_overview') }}">Rendering</a>
+        {% if g.admin %}
+          <a href="{{ url_for('admin.index') }}">Upload & Dateien</a>
+          <a href="{{ url_for('admin.admin_tokens') }}">API Tokens</a>
+          <a href="{{ url_for('admin.rendering_overview') }}">Rendering</a>
+          <span style="margin-left:1rem;color:#666;">Angemeldet als <strong>{{ g.admin.username }}</strong></span>
+          <a href="{{ url_for('admin.logout') }}" style="margin-left:1rem;">Logout</a>
+        {% else %}
+          <a href="{{ url_for('admin.login') }}">Login</a>
+        {% endif %}
       </nav>
     </header>
     <main>
