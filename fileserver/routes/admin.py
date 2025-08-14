@@ -2,7 +2,7 @@ import uuid, mimetypes, secrets
 import datetime as dt
 from pathlib import Path
 from werkzeug.utils import secure_filename
-from flask import render_template, request, redirect, url_for, abort, jsonify
+from flask import render_template, request, redirect, url_for, abort, jsonify  # request ist wichtig
 
 from . import admin_bp
 from ..config import Config
@@ -80,3 +80,12 @@ def admin_token_revoke(token_id):
     t.revoked = True
     db.session.commit()
     return redirect(url_for("admin.admin_tokens"))
+
+# -------- Embed-Generator pro Datei ----------
+
+@admin_bp.get("/admin/embed/<file_id>")
+def admin_embed(file_id):
+    f = File.query.get_or_404(file_id)
+    base_url = request.url_root.rstrip("/")  # z.B. http://127.0.0.1:5000
+    kind = "audio" if (f.mime_type or "").startswith("audio") else ("video" if (f.mime_type or "").startswith("video") else "audio")
+    return render_template("admin/embed.html", file=f, base_url=base_url, kind=kind)

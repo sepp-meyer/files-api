@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>Embed-Generator</h2>
+  <p><strong>Titel:</strong> {{ file.title }}<br>
+     <strong>UUID:</strong> <code>{{ file.id }}</code><br>
+     <strong>MIME:</strong> {{ file.mime_type }} · <a href="{{ url_for('admin.index') }}">Zurück zur Liste</a>
+  </p>
+
+  <div class="row" style="grid-template-columns:180px 1fr;display:grid;gap:.5rem 1rem;align-items:center;">
+    <label>Base URL</label>
+    <input id="base" value="{{ base_url }}">
+    <label>UUID</label>
+    <input id="uuid" value="{{ file.id }}" readonly>
+    <label>Token</label>
+    <input id="token" placeholder="Token einfügen …">
+    <label>Typ</label>
+    <select id="kind">
+      <option value="audio" {% if kind=='audio' %}selected{% endif %}>Audio</option>
+      <option value="video" {% if kind=='video' %}selected{% endif %}>Video</option>
+    </select>
+  </div>
+  <button id="build" style="margin-top:.6rem;">Embed setzen</button>
+</section>
+
+<section class="card">
+  <h3>Vorschau</h3>
+  <div id="preview"></div>
+</section>
+
+<section class="card">
+  <h3>Fertiger Link</h3>
+  <p><code id="link">–</code>
+     <button id="copyLink" style="margin-left:.5rem;">Kopieren</button>
+  </p>
+  <h3>HTML-Snippet</h3>
+  <pre id="snippet" style="white-space: pre-wrap; background: #f8f8f8; padding: .75rem; border-radius: 8px;">–</pre>
+  <button id="copySnippet">Snippet kopieren</button>
+</section>
+
+<script>
+  const $ = (s) => document.querySelector(s);
+  const build = () => {
+    const base  = $('#base').value.trim().replace(/\/+$/,'');
+    const uuid  = $('#uuid').value.trim();
+    const token = $('#token').value.trim();
+    const kind  = $('#kind').value;
+
+    if (!base || !uuid || !token) {
+      alert("Bitte Base URL, UUID und Token ausfüllen.");
+      return;
+    }
+    const src = `${base}/api/embed/${encodeURIComponent(uuid)}?token=${encodeURIComponent(token)}`;
+    $('#link').textContent = src;
+
+    let html = '';
+    if (kind === 'audio') {
+      html = `<audio controls preload="metadata" src="${src}"></audio>`;
+      $('#preview').innerHTML = html;
+    } else {
+      html = `<video controls preload="metadata" width="640" src="${src}"></video>`;
+      $('#preview').innerHTML = html;
+    }
+    $('#snippet').textContent = html;
+  };
+
+  const copyText = (el) => navigator.clipboard?.writeText(el.textContent || el.value || '').then(()=> {
+    const btn = event.target; const old = btn.textContent; btn.textContent = 'Kopiert'; setTimeout(()=>btn.textContent = old, 1000);
+  }).catch(()=> alert('Kopieren nicht möglich'));
+
+  $('#build').addEventListener('click', build);
+  $('#copyLink').addEventListener('click', () => copyText($('#link')));
+  $('#copySnippet').addEventListener('click', () => copyText($('#snippet')));
+
+  // UUID & Base sind vorausgefüllt – falls Token schon in der Zwischenablage ist, sofort bauen:
+  // build(); // optional automatisch bauen
+</script>
+
+<p style="color:#666;font-size:.9rem;">
+  Hinweis: Der Embed-Link ruft <code>/api/embed/&lt;uuid&gt;?token=…</code> auf.
+  Der Server erzeugt intern eine kurzlebige signierte Download-URL (Redirect) mit Range-Support (Seek).
+</p>
+{% endblock %}

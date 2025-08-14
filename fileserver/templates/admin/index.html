@@ -26,7 +26,8 @@
           <td>{{ f.size_bytes }}</td>
           <td>
             <a href="{{ url_for('admin.admin_sign', file_id=f.id) }}" target="_blank">Signierte URL (JSON)</a> |
-            <a href="{{ url_for('api.api_file_meta', file_id=f.id) }}?token=DEIN_TOKEN" target="_blank">Meta (mit Token)</a>
+            <a href="{{ url_for('api.api_file_meta', file_id=f.id) }}?token=DEIN_TOKEN" target="_blank">Meta (mit Token)</a> |
+            <a href="{{ url_for('admin.admin_embed', file_id=f.id) }}">Embed-Generator</a>
           </td>
         </tr>
       {% endfor %}
