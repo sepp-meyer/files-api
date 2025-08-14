@@ -5,10 +5,11 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 def _parse_allowed_ext():
-    env = os.getenv("ALLOWED_EXT", "mp3")  # << nur mp3 als Default
+    # Standardmäßig alle von dir gewünschten Typen erlauben
+    env = os.getenv("ALLOWED_EXT", "mp3,mp4,wav,pdf,png,jpg,jpeg,gif")
     exts = {e.strip().lower() for e in env.split(",") if e.strip()}
     # Sicherheitsnetz: nur bekannte Typen zulassen
-    allowed = {"mp3", "mp4", "wav", "flac", "jpg", "png", "pdf"}
+    allowed = {"mp3", "mp4", "wav", "pdf", "png", "jpg", "jpeg", "gif", "flac"}
     return exts & allowed
 
 class Config:
@@ -19,7 +20,7 @@ class Config:
     STORAGE_DIR.mkdir(parents=True, exist_ok=True)
     DOWNLOAD_HMAC_SECRET = os.getenv("DOWNLOAD_HMAC_SECRET", "download-secret-change-me")
     CORS_ORIGINS = os.getenv("CORS_ORIGINS", "")
-    ALLOWED_EXT = _parse_allowed_ext()  # << hierher verlegt
+    ALLOWED_EXT = _parse_allowed_ext()
 
 def get_cors_resources():
     if not Config.CORS_ORIGINS:

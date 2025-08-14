@@ -35,7 +35,7 @@
         <td>{{ f.size_bytes }}</td>
         <td>
           <a href="{{ url_for('admin.file_detail', file_id=f.id) }}">Verwalten</a>
-          <!-- Aufräumen: „Signierte URL (JSON)“ & „Meta (mit Token)“ entfernt -->
+          <!-- „Signierte URL (JSON)“ & „Meta (mit Token)“ entfernt -->
         </td>
       </tr>
       {% endfor %}

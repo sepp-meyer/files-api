@@ -16,7 +16,7 @@ from . import admin_bp
 from ..config import Config
 from ..models import db, File, ApiToken
 from ..utils import sha256_of_file, hash_token
-
+from ..renderers import detect_kind, RENDER_MATRIX
 
 # ---------- Dashboard / Liste ----------
 
@@ -25,6 +25,11 @@ def index():
     files = File.query.order_by(File.created_at.desc()).all()
     return render_template("admin/index.html", files=files)
 
+# ---------- Rendering-Übersicht ----------
+
+@admin_bp.get("/rendering")
+def rendering_overview():
+    return render_template("admin/rendering.html", matrix=RENDER_MATRIX)
 
 # ---------- Upload ----------
 
@@ -67,7 +72,6 @@ def upload():
     db.session.add(rec)
     db.session.commit()
     return redirect(url_for("admin.index"))
-
 
 # ---------- Token-Verwaltung ----------
 
@@ -116,21 +120,20 @@ def admin_token_delete(token_id):
     db.session.commit()
     return redirect(url_for("admin.admin_tokens"))
 
-
 # ---------- Datei-Detail / Edit / Delete ----------
 
 @admin_bp.get("/files/<file_id>")
 def file_detail(file_id):
     f = File.query.get_or_404(file_id)
-    mt = (f.mime_type or "")
-    if mt.startswith("video"):
-        kind = "video"
-    elif mt.startswith("audio"):
-        kind = "audio"
-    else:
-        # Default: als Audio behandeln (für einfache Audios/Spoken Word)
-        kind = "audio"
-    return render_template("admin/file_detail.html", file=f, kind=kind)
+    ext = Path(f.storage_path).suffix[1:].lower() if f.storage_path else None
+    default_kind = detect_kind(f.mime_type, ext)
+    return render_template(
+        "admin/file_detail.html",
+        file=f,
+        default_kind=default_kind,
+        # für die Auswahl – bewusst überschaubar halten
+        kinds=["audio", "video", "image", "pdf"]
+    )
 
 @admin_bp.post("/files/<file_id>/update")
 def file_update(file_id):
@@ -157,7 +160,6 @@ def file_delete(file_id):
         db.session.commit()
     return redirect(url_for("admin.index"))
 
-
 # ---------- Admin-Stream (Preview ohne Token) ----------
 
 @admin_bp.get("/stream/<file_id>")
@@ -175,7 +177,7 @@ def admin_stream(file_id):
         str(path),
         mimetype=f.mime_type,
         as_attachment=False,
-        conditional=True,  # ETag / If-Range / 206 Unterstützung durch Werkzeug
+        conditional=True,  # Range/ETag
         etag=True,
         max_age=3600,
         last_modified=dt.datetime.utcfromtimestamp(path.stat().st_mtime)

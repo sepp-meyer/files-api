@@ -40,8 +40,9 @@
     <input id="token" placeholder="Token einfügen …">
     <label>Typ</label>
     <select id="kind">
-      <option value="audio" {% if kind=='audio' %}selected{% endif %}>Audio</option>
-      <option value="video" {% if kind=='video' %}selected{% endif %}>Video</option>
+      {% for k in kinds %}
+        <option value="{{ k }}" {% if k==default_kind %}selected{% endif %}>{{ k }}</option>
+      {% endfor %}
     </select>
   </div>
   <button id="build" style="margin-top:.6rem;">Snippet erzeugen</button>
@@ -66,45 +67,58 @@
 
 <script>
   const $ = (s) => document.querySelector(s);
+  const previewKind = "{{ default_kind }}";
+  const previewSrc  = '{{ url_for("admin.admin_stream", file_id=file.id) }}';
 
-  // Admin-Preview ohne Token (direkter Stream)
-  $('#loadPreview').addEventListener('click', () => {
-    const src = '{{ url_for("admin.admin_stream", file_id=file.id) }}';
-    const kind = '{{ kind }}';
-    const html = (kind === 'video')
-      ? `<video controls preload="metadata" width="640" src="${src}"></video>`
-      : `<audio controls preload="metadata" src="${src}"></audio>`;
-    $('#preview').innerHTML = html;
+  const el = {
+    preview: $('#preview'),
+    base: $('#base'),
+    uuid: $('#uuid'),
+    token: $('#token'),
+    kind: $('#kind'),
+    link: $('#link'),
+    snippet: $('#snippet'),
+    build: $('#build'),
+    copyLink: $('#copyLink'),
+    copySnippet: $('#copySnippet'),
+    loadPreview: $('#loadPreview')
+  };
+
+  function htmlFor(kind, src) {
+    if (kind === 'video') return `<video controls preload="metadata" width="640" src="${src}"></video>`;
+    if (kind === 'audio') return `<audio controls preload="metadata" src="${src}"></audio>`;
+    if (kind === 'image') return `<img src="${src}" alt="" style="max-width:100%;height:auto;">`;
+    if (kind === 'pdf')   return `<iframe src="${src}" width="100%" height="600" style="border:1px solid #eee;border-radius:8px;"></iframe>`;
+    return `<a href="${src}" target="_blank" rel="noopener">Datei öffnen</a>`;
+  }
+
+  // Admin-Preview (ohne Token)
+  el.loadPreview.addEventListener('click', () => {
+    el.preview.innerHTML = htmlFor(previewKind, previewSrc);
   });
 
   // Embed-Snippet builder
-  const build = () => {
-    const base  = $('#base').value.trim().replace(/\/+$/,'');
-    const uuid  = $('#uuid').value.trim();
-    const token = $('#token').value.trim();
-    const kind  = $('#kind').value;
-    if (!base || !uuid || !token) {
-      alert('Bitte Base, UUID und Token angeben.');
-      return;
-    }
+  function build() {
+    const base  = el.base.value.trim().replace(/\/+$/,'');
+    const uuid  = el.uuid.value.trim();
+    const token = el.token.value.trim();
+    const kind  = el.kind.value;
+    if (!base || !uuid || !token) { alert('Bitte Base, UUID und Token angeben.'); return; }
     const src = `${base}/api/embed/${encodeURIComponent(uuid)}?token=${encodeURIComponent(token)}`;
-    $('#link').textContent = src;
-    const html = (kind === 'video')
-      ? `<video controls preload="metadata" width="640" src="${src}"></video>`
-      : `<audio controls preload="metadata" src="${src}"></audio>`;
-    $('#snippet').textContent = html;
-  };
+    el.link.textContent = src;
+    el.snippet.textContent = htmlFor(kind, src);
+  }
 
-  const copyText = (text, btn) => {
+  function copyText(text, btn) {
     navigator.clipboard?.writeText(text).then(() => {
       const old = btn.textContent;
       btn.textContent = 'Kopiert';
       setTimeout(() => btn.textContent = old, 1100);
     }).catch(() => alert('Kopieren nicht möglich'));
-  };
+  }
 
-  $('#build').addEventListener('click', build);
-  $('#copyLink').addEventListener('click', (e) => copyText($('#link').textContent, e.currentTarget));
-  $('#copySnippet').addEventListener('click', (e) => copyText($('#snippet').textContent, e.currentTarget));
+  el.build.addEventListener('click', build);
+  el.copyLink.addEventListener('click', (e) => copyText(el.link.textContent, e.currentTarget));
+  el.copySnippet.addEventListener('click', (e) => copyText(el.snippet.textContent, e.currentTarget));
 </script>
 {% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>Rendering-Übersicht</h2>
+  <p>Diese Übersicht zeigt, wie Dateitypen eingebettet werden. Die Einbettung nutzt den <code>/api/embed/&lt;uuid&gt;?token=…</code>-Endpunkt (302-Redirect auf kurzlebige Download-URL, mit Range/Seek).</p>
+</section>
+
+<section class="card">
+  <table>
+    <thead><tr><th>Kind</th><th>Extensions</th><th>HTML</th></tr></thead>
+    <tbody>
+      {% for row in matrix %}
+      <tr>
+        <td><code>{{ row.kind }}</code></td>
+        <td>{{ row.extensions }}</td>
+        <td><pre style="white-space: pre-wrap; background:#f8f8f8; padding:.6rem; border-radius:8px;">{{ row.html }}</pre></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
