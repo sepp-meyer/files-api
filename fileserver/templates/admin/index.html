@@ -15,22 +15,29 @@
 <section class="card">
   <h2>Dateien</h2>
   <table>
-    <thead><tr><th>UUID</th><th>Titel</th><th>Jahr</th><th>MIME</th><th>Größe</th><th>Aktionen</th></tr></thead>
+    <thead>
+      <tr>
+        <th>UUID</th>
+        <th>Titel</th>
+        <th>Jahr</th>
+        <th>MIME</th>
+        <th>Größe</th>
+        <th>Aktionen</th>
+      </tr>
+    </thead>
     <tbody>
       {% for f in files %}
-        <tr>
-          <td><code>{{ f.id }}</code></td>
-          <td>{{ f.title }}</td>
-          <td>{{ f.year or '-' }}</td>
-          <td>{{ f.mime_type }}</td>
-          <td>{{ f.size_bytes }}</td>
-            <td>
-              <a href="{{ url_for('admin.file_detail', file_id=f.id) }}">Verwalten</a> |
-              <a href="{{ url_for('admin.admin_sign', file_id=f.id) }}" target="_blank">Signierte URL (JSON)</a> |
-              <a href="{{ url_for('api.api_file_meta', file_id=f.id) }}?token=DEIN_TOKEN" target="_blank">Meta (mit Token)</a>
-            </td>
-
-        </tr>
+      <tr>
+        <td><code>{{ f.id }}</code></td>
+        <td>{{ f.title }}</td>
+        <td>{{ f.year or '-' }}</td>
+        <td>{{ f.mime_type }}</td>
+        <td>{{ f.size_bytes }}</td>
+        <td>
+          <a href="{{ url_for('admin.file_detail', file_id=f.id) }}">Verwalten</a>
+          <!-- Aufräumen: „Signierte URL (JSON)“ & „Meta (mit Token)“ entfernt -->
+        </td>
+      </tr>
       {% endfor %}
     </tbody>
   </table>

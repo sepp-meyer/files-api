@@ -16,7 +16,11 @@
 <section class="card">
   <h3>Bestehende Tokens</h3>
   <table>
-    <thead><tr><th>ID</th><th>Name</th><th>Scopes</th><th>Expires</th><th>Revoked</th><th>Aktion</th></tr></thead>
+    <thead>
+      <tr>
+        <th>ID</th><th>Name</th><th>Scopes</th><th>Expires</th><th>Revoked</th><th>Aktionen</th>
+      </tr>
+    </thead>
     <tbody>
       {% for t in tokens %}
       <tr>
@@ -25,12 +29,15 @@
         <td>{{ t.scopes }}</td>
         <td>{{ t.expires_at or '-' }}</td>
         <td>{{ 'ja' if t.revoked else 'nein' }}</td>
-        <td>
+        <td style="display:flex; gap:.5rem;">
           {% if not t.revoked %}
           <form method="post" action="{{ url_for('admin.admin_token_revoke', token_id=t.id) }}">
             <button type="submit">Revoke</button>
           </form>
-          {% else %}-{% endif %}
+          {% endif %}
+          <form method="post" action="{{ url_for('admin.admin_token_delete', token_id=t.id) }}" onsubmit="return confirm('Token endgültig löschen?')">
+            <button type="submit" style="background:#c33">Delete</button>
+          </form>
         </td>
       </tr>
       {% endfor %}

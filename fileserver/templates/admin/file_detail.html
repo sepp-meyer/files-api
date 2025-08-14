@@ -2,10 +2,12 @@
 {% block content %}
 <section class="card">
   <h2>Datei verwalten</h2>
-  <p><strong>Titel:</strong> {{ file.title }}<br>
-     <strong>UUID:</strong> <code>{{ file.id }}</code><br>
-     <strong>MIME:</strong> {{ file.mime_type }} · <strong>Größe:</strong> {{ file.size_bytes }} Bytes<br>
-     <a href="{{ url_for('admin.index') }}">← Zurück zur Liste</a>
+  <p>
+    <strong>Titel:</strong> {{ file.title }}<br>
+    <strong>UUID:</strong> <code>{{ file.id }}</code><br>
+    <strong>MIME:</strong> {{ file.mime_type }} ·
+    <strong>Größe:</strong> {{ file.size_bytes }} Bytes<br>
+    <a href="{{ url_for('admin.index') }}">← Zurück zur Liste</a>
   </p>
 </section>
 
@@ -13,7 +15,7 @@
   <h3>Vorschau (ohne Token)</h3>
   <div id="preview" style="margin:.5rem 0;"></div>
   <button id="loadPreview">Vorschau laden</button>
-  <small style="color:#666;display:block;margin-top:.5rem;">Nutzt intern eine kurzlebige Admin-Signatur.</small>
+  <small style="color:#666;display:block;margin-top:.5rem;">Streamt direkt aus dem Storage (Admin-intern).</small>
 </section>
 
 <section class="card">
@@ -45,9 +47,11 @@
   <button id="build" style="margin-top:.6rem;">Snippet erzeugen</button>
 
   <h4 style="margin-top:1rem;">Fertiger Link</h4>
-  <p><code id="link">–</code>
-     <button id="copyLink" style="margin-left:.5rem;">Kopieren</button>
+  <p>
+    <code id="link">–</code>
+    <button id="copyLink" style="margin-left:.5rem;">Kopieren</button>
   </p>
+
   <h4>HTML-Snippet</h4>
   <pre id="snippet" style="white-space: pre-wrap; background: #f8f8f8; padding: .75rem; border-radius: 8px;">–</pre>
   <button id="copySnippet">Snippet kopieren</button>
@@ -63,12 +67,9 @@
 <script>
   const $ = (s) => document.querySelector(s);
 
-  // Admin-Vorschau (ohne Token): holt signierte URL als JSON
-  $('#loadPreview').addEventListener('click', async () => {
-    const res = await fetch('{{ url_for("admin.admin_sign", file_id=file.id) }}');
-    if (!res.ok) { alert('Konnte Signatur nicht laden'); return; }
-    const data = await res.json();
-    const src = data.download_url;
+  // Admin-Preview ohne Token (direkter Stream)
+  $('#loadPreview').addEventListener('click', () => {
+    const src = '{{ url_for("admin.admin_stream", file_id=file.id) }}';
     const kind = '{{ kind }}';
     const html = (kind === 'video')
       ? `<video controls preload="metadata" width="640" src="${src}"></video>`
@@ -76,12 +77,16 @@
     $('#preview').innerHTML = html;
   });
 
+  // Embed-Snippet builder
   const build = () => {
     const base  = $('#base').value.trim().replace(/\/+$/,'');
     const uuid  = $('#uuid').value.trim();
     const token = $('#token').value.trim();
     const kind  = $('#kind').value;
-    if (!base || !uuid || !token) { alert('Bitte Base, UUID und Token angeben.'); return; }
+    if (!base || !uuid || !token) {
+      alert('Bitte Base, UUID und Token angeben.');
+      return;
+    }
     const src = `${base}/api/embed/${encodeURIComponent(uuid)}?token=${encodeURIComponent(token)}`;
     $('#link').textContent = src;
     const html = (kind === 'video')
@@ -89,12 +94,17 @@
       : `<audio controls preload="metadata" src="${src}"></audio>`;
     $('#snippet').textContent = html;
   };
-  const copyText = (el) => navigator.clipboard?.writeText(el.textContent || el.value || '').then(()=> {
-    const btn = event.target; const old = btn.textContent; btn.textContent = 'Kopiert'; setTimeout(()=>btn.textContent = old, 1000);
-  }).catch(()=> alert('Kopieren nicht möglich'));
+
+  const copyText = (text, btn) => {
+    navigator.clipboard?.writeText(text).then(() => {
+      const old = btn.textContent;
+      btn.textContent = 'Kopiert';
+      setTimeout(() => btn.textContent = old, 1100);
+    }).catch(() => alert('Kopieren nicht möglich'));
+  };
 
   $('#build').addEventListener('click', build);
-  $('#copyLink').addEventListener('click', () => copyText($('#link')));
-  $('#copySnippet').addEventListener('click', () => copyText($('#snippet')));
+  $('#copyLink').addEventListener('click', (e) => copyText($('#link').textContent, e.currentTarget));
+  $('#copySnippet').addEventListener('click', (e) => copyText($('#snippet').textContent, e.currentTarget));
 </script>
 {% endblock %}
