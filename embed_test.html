@@ -1,0 +1,17 @@
+<!-- embed_test.html (minimal) -->
+<!doctype html>
+<html lang="de">
+  <meta charset="utf-8">
+  <title>Embed Test</title>
+  <h1>Audio-Embed vom Fileserver</h1>
+
+  <!-- Ersetze UUID_HIER und TOKEN_HIER -->
+  <audio controls preload="metadata"
+         src="http://127.0.0.1:5000/api/embed/211f43c1-8a57-45ac-a414-d3ae5e504796?token=lXO5DB7xQAS4-u9WoTyWg5oWxbJkBY1G4HTlDlEOKrU"></audio>
+
+  <!-- Hinweis:
+       - <audio>/<video> benötigen keine CORS-Anpassungen für das reine Abspielen.
+       - Der /api/embed/...-Endpunkt prüft den Token und leitet auf eine kurzlebige,
+         signierte Download-URL um (Range/Seek funktioniert).
+  -->
+</html>
