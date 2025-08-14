@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title or "Fileserver Admin" }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <header>
+      <h1>{{ title or "Fileserver Admin" }}</h1>
+      <nav>
+        <a href="{{ url_for('admin.index') }}">Upload & Dateien</a>
+        <a href="{{ url_for('admin.admin_tokens') }}">API Tokens</a>
+      </nav>
+    </header>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+    <footer>
+      <small>PoC Fileserver · Flask</small>
+    </footer>
+  </body>
+</html>

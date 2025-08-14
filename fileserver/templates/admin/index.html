@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>Upload</h2>
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('admin.upload') }}">
+    <div class="row">
+      <input name="title" placeholder="Titel" required>
+      <input name="year" placeholder="Erscheinungsjahr (optional)" type="number" min="0">
+    </div>
+    <input type="file" name="file" required>
+    <button type="submit">Hochladen</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Dateien</h2>
+  <table>
+    <thead><tr><th>UUID</th><th>Titel</th><th>Jahr</th><th>MIME</th><th>Größe</th><th>Aktionen</th></tr></thead>
+    <tbody>
+      {% for f in files %}
+        <tr>
+          <td><code>{{ f.id }}</code></td>
+          <td>{{ f.title }}</td>
+          <td>{{ f.year or '-' }}</td>
+          <td>{{ f.mime_type }}</td>
+          <td>{{ f.size_bytes }}</td>
+          <td>
+            <a href="{{ url_for('admin.admin_sign', file_id=f.id) }}" target="_blank">Signierte URL (JSON)</a> |
+            <a href="{{ url_for('api.api_file_meta', file_id=f.id) }}?token=DEIN_TOKEN" target="_blank">Meta (mit Token)</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

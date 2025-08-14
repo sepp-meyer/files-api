@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>API Tokens</h2>
+  <form method="post" action="{{ url_for('admin.admin_token_create') }}">
+    <div class="row">
+      <input name="name" placeholder="Name" required>
+      <input name="days" type="number" min="0" placeholder="Gültig (Tage, optional)">
+      <input name="scopes" placeholder="Scopes (z.B. read,sign)" value="read">
+    </div>
+    <button type="submit">Token erzeugen</button>
+  </form>
+  <p><em>Hinweis:</em> Der Token wird nach dem Erzeugen als JSON angezeigt und nicht erneut gespeichert.</p>
+</section>
+
+<section class="card">
+  <h3>Bestehende Tokens</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Name</th><th>Scopes</th><th>Expires</th><th>Revoked</th><th>Aktion</th></tr></thead>
+    <tbody>
+      {% for t in tokens %}
+      <tr>
+        <td>{{ t.id }}</td>
+        <td>{{ t.name }}</td>
+        <td>{{ t.scopes }}</td>
+        <td>{{ t.expires_at or '-' }}</td>
+        <td>{{ 'ja' if t.revoked else 'nein' }}</td>
+        <td>
+          {% if not t.revoked %}
+          <form method="post" action="{{ url_for('admin.admin_token_revoke', token_id=t.id) }}">
+            <button type="submit">Revoke</button>
+          </form>
+          {% else %}-{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
