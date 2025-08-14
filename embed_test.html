@@ -1,17 +1,83 @@
-<!-- embed_test.html (minimal) -->
+<!-- embed_test.html (Generator) -->
 <!doctype html>
 <html lang="de">
   <meta charset="utf-8">
-  <title>Embed Test</title>
-  <h1>Audio-Embed vom Fileserver</h1>
+  <title>Embed Test · Generator</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; }
+    input, select, button { padding: .5rem; margin: .25rem 0; }
+    code { background: #f2f2f2; padding: .2rem .4rem; border-radius: 6px; }
+    .row { display: grid; grid-template-columns: 180px 1fr; gap: .5rem 1rem; align-items: center; }
+    .card { border: 1px solid #eee; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
+  </style>
 
-  <!-- Ersetze UUID_HIER und TOKEN_HIER -->
-  <audio controls preload="metadata"
-         src="http://127.0.0.1:5000/api/embed/211f43c1-8a57-45ac-a414-d3ae5e504796?token=lXO5DB7xQAS4-u9WoTyWg5oWxbJkBY1G4HTlDlEOKrU"></audio>
+  <h1>Embed-Link-Generator</h1>
 
-  <!-- Hinweis:
-       - <audio>/<video> benötigen keine CORS-Anpassungen für das reine Abspielen.
-       - Der /api/embed/...-Endpunkt prüft den Token und leitet auf eine kurzlebige,
-         signierte Download-URL um (Range/Seek funktioniert).
+  <div class="card">
+    <div class="row">
+      <label>Base URL</label>
+      <input id="base" value="http://127.0.0.1:5000">
+      <label>UUID</label>
+      <input id="uuid" placeholder="z.B. abc1234-...">
+      <label>Token</label>
+      <input id="token" placeholder="dein API-Token">
+      <label>Typ</label>
+      <select id="kind">
+        <option value="audio" selected>Audio</option>
+        <option value="video">Video</option>
+      </select>
+    </div>
+    <button id="build">Embed setzen</button>
+  </div>
+
+  <div class="card">
+    <h2>Vorschau</h2>
+    <div id="preview"></div>
+  </div>
+
+  <div class="card">
+    <h2>Fertiger Embed-Link</h2>
+    <p><code id="link">–</code></p>
+    <h3>HTML-Snippet</h3>
+    <pre id="snippet" style="white-space: pre-wrap; background: #f8f8f8; padding: .75rem; border-radius: 8px;">–</pre>
+  </div>
+
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+    const esc = (s) => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+    function build() {
+      const base  = $('#base').value.trim().replace(/\/+$/,'');
+      const uuid  = $('#uuid').value.trim();
+      const token = $('#token').value.trim();
+      const kind  = $('#kind').value;
+
+      if (!base || !uuid || !token) {
+        alert("Bitte Base URL, UUID und Token ausfüllen.");
+        return;
+      }
+
+      const src = `${base}/api/embed/${encodeURIComponent(uuid)}?token=${encodeURIComponent(token)}`;
+      $('#link').textContent = src;
+
+      let html = '';
+      if (kind === 'audio') {
+        html = `<audio controls preload="metadata" src="${src}"></audio>`;
+        $('#preview').innerHTML = `<audio controls preload="metadata" src="${src}"></audio>`;
+      } else {
+        html = `<video controls preload="metadata" width="640" src="${src}"></video>`;
+        $('#preview').innerHTML = `<video controls preload="metadata" width="640" src="${src}"></video>`;
+      }
+      $('#snippet').textContent = html;
+    }
+
+    $('#build').addEventListener('click', build);
+  </script>
+
+  <!-- Hinweise:
+       • Der erzeugte Link verweist auf /api/embed/<uuid>?token=<token>.
+       • Der Server erstellt bei jedem Aufruf intern eine kurzlebige signierte URL (Redirect),
+         die direkt streambar ist (Range/Seek).
+       • Für JS-Fetches von einer anderen Origin ggf. CORS in der .env (CORS_ORIGINS) setzen.
   -->
 </html>
