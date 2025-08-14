@@ -1,14 +1,14 @@
 import os
 from flask import Flask
 from flask_cors import CORS
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-from config import Config, get_cors_resources
-from models import db
-from routes import admin_bp, api_bp
+from .config import Config, get_cors_resources
+from .models import db
+from .routes import admin_bp, api_bp
 
-# .env laden (falls vorhanden)
-load_dotenv()
+# .env laden – sucht im Projekt (robuster)
+load_dotenv(find_dotenv())
 
 def create_app():
     app = Flask(__name__, template_folder="templates", static_folder="static")

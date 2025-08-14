@@ -5,9 +5,9 @@ from werkzeug.utils import secure_filename
 from flask import render_template, request, redirect, url_for, abort, jsonify
 
 from . import admin_bp
-from config import Config
-from models import db, File, ApiToken
-from utils import sha256_of_file, sign_download, hash_token
+from ..config import Config
+from ..models import db, File, ApiToken
+from ..utils import sha256_of_file, sign_download, hash_token
 
 @admin_bp.get("/")
 def index():

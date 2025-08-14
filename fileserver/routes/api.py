@@ -3,8 +3,8 @@ from pathlib import Path
 from flask import jsonify, url_for, abort, send_file, make_response, redirect, request
 
 from . import api_bp
-from models import File
-from utils import require_token, sign_download, verify_signature
+from ..models import File
+from ..utils import require_token, sign_download, verify_signature
 
 @api_bp.get("/files")
 @require_token(scopes_required=("read",))

@@ -3,8 +3,8 @@ import datetime as dt
 from functools import wraps
 from flask import request, abort
 
-from config import Config
-from models import ApiToken, db
+from .config import Config
+from .models import ApiToken, db
 
 def sha256_of_file(path, chunk_size=1024*1024):
     h = hashlib.sha256()
