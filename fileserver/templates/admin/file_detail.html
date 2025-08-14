@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>Datei verwalten</h2>
+  <p><strong>Titel:</strong> {{ file.title }}<br>
+     <strong>UUID:</strong> <code>{{ file.id }}</code><br>
+     <strong>MIME:</strong> {{ file.mime_type }} · <strong>Größe:</strong> {{ file.size_bytes }} Bytes<br>
+     <a href="{{ url_for('admin.index') }}">← Zurück zur Liste</a>
+  </p>
+</section>
+
+<section class="card">
+  <h3>Vorschau (ohne Token)</h3>
+  <div id="preview" style="margin:.5rem 0;"></div>
+  <button id="loadPreview">Vorschau laden</button>
+  <small style="color:#666;display:block;margin-top:.5rem;">Nutzt intern eine kurzlebige Admin-Signatur.</small>
+</section>
+
+<section class="card">
+  <h3>Metadaten bearbeiten</h3>
+  <form method="post" action="{{ url_for('admin.file_update', file_id=file.id) }}">
+    <div class="row">
+      <input name="title" value="{{ file.title }}" required>
+      <input name="year" type="number" min="0" value="{{ file.year or '' }}" placeholder="Jahr (optional)">
+    </div>
+    <button type="submit">Speichern</button>
+  </form>
+</section>
+
+<section class="card">
+  <h3>Einbettung (öffentlich, benötigt Token)</h3>
+  <div class="row" style="grid-template-columns:160px 1fr;display:grid;gap:.5rem 1rem;align-items:center;">
+    <label>Base URL</label>
+    <input id="base" value="{{ request.url_root.rstrip('/') }}">
+    <label>UUID</label>
+    <input id="uuid" value="{{ file.id }}" readonly>
+    <label>Token</label>
+    <input id="token" placeholder="Token einfügen …">
+    <label>Typ</label>
+    <select id="kind">
+      <option value="audio" {% if kind=='audio' %}selected{% endif %}>Audio</option>
+      <option value="video" {% if kind=='video' %}selected{% endif %}>Video</option>
+    </select>
+  </div>
+  <button id="build" style="margin-top:.6rem;">Snippet erzeugen</button>
+
+  <h4 style="margin-top:1rem;">Fertiger Link</h4>
+  <p><code id="link">–</code>
+     <button id="copyLink" style="margin-left:.5rem;">Kopieren</button>
+  </p>
+  <h4>HTML-Snippet</h4>
+  <pre id="snippet" style="white-space: pre-wrap; background: #f8f8f8; padding: .75rem; border-radius: 8px;">–</pre>
+  <button id="copySnippet">Snippet kopieren</button>
+</section>
+
+<section class="card" style="border-color:#f3b;box-shadow:0 1px 2px rgba(255,0,128,.08)">
+  <h3>🗑️ Löschen</h3>
+  <form method="post" action="{{ url_for('admin.file_delete', file_id=file.id) }}" onsubmit="return confirm('Diese Datei und ihr Ordner werden dauerhaft gelöscht. Fortfahren?')">
+    <button type="submit" style="background:#c33">Datei endgültig löschen</button>
+  </form>
+</section>
+
+<script>
+  const $ = (s) => document.querySelector(s);
+
+  // Admin-Vorschau (ohne Token): holt signierte URL als JSON
+  $('#loadPreview').addEventListener('click', async () => {
+    const res = await fetch('{{ url_for("admin.admin_sign", file_id=file.id) }}');
+    if (!res.ok) { alert('Konnte Signatur nicht laden'); return; }
+    const data = await res.json();
+    const src = data.download_url;
+    const kind = '{{ kind }}';
+    const html = (kind === 'video')
+      ? `<video controls preload="metadata" width="640" src="${src}"></video>`
+      : `<audio controls preload="metadata" src="${src}"></audio>`;
+    $('#preview').innerHTML = html;
+  });
+
+  const build = () => {
+    const base  = $('#base').value.trim().replace(/\/+$/,'');
+    const uuid  = $('#uuid').value.trim();
+    const token = $('#token').value.trim();
+    const kind  = $('#kind').value;
+    if (!base || !uuid || !token) { alert('Bitte Base, UUID und Token angeben.'); return; }
+    const src = `${base}/api/embed/${encodeURIComponent(uuid)}?token=${encodeURIComponent(token)}`;
+    $('#link').textContent = src;
+    const html = (kind === 'video')
+      ? `<video controls preload="metadata" width="640" src="${src}"></video>`
+      : `<audio controls preload="metadata" src="${src}"></audio>`;
+    $('#snippet').textContent = html;
+  };
+  const copyText = (el) => navigator.clipboard?.writeText(el.textContent || el.value || '').then(()=> {
+    const btn = event.target; const old = btn.textContent; btn.textContent = 'Kopiert'; setTimeout(()=>btn.textContent = old, 1000);
+  }).catch(()=> alert('Kopieren nicht möglich'));
+
+  $('#build').addEventListener('click', build);
+  $('#copyLink').addEventListener('click', () => copyText($('#link')));
+  $('#copySnippet').addEventListener('click', () => copyText($('#snippet')));
+</script>
+{% endblock %}

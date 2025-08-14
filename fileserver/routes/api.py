@@ -1,3 +1,4 @@
+# fileserver/routes/api.py
 import time, datetime as dt
 from pathlib import Path
 from flask import jsonify, url_for, abort, send_file, make_response, redirect, request
@@ -54,7 +55,6 @@ def api_embed(file_id):
     return resp
 
 @api_bp.get("/files/<file_id>/download")
-@api_bp.get("/files/<file_id>/download")
 def api_file_download(file_id):
     exp = request.args.get("exp", type=int)
     sig = request.args.get("sig", default="")
@@ -66,7 +66,6 @@ def api_file_download(file_id):
     if not path.is_file():
         abort(404)
 
-    # Wichtig: conditional=True für Range; Pfad als str() übergeben
     resp = make_response(send_file(
         str(path),
         mimetype=f.mime_type,

@@ -43,7 +43,7 @@ def random_title():
 
 def upload_test_file(session: requests.Session, title: str):
     print("[3/9] Lade Testdatei hoch ...")
-    url = urljoin(BASE_URL, "/upload")
+    url = urljoin(BASE_URL, "/admin/upload")
 
     # kleine Dummy-"mp3"-Datei (Inhalt ist egal; Endung zählt für MIME)
     fake_mp3 = io.BytesIO(b"ID3\x03\x00\x00\x00\x00\x00\x00TEST-DATA-" + os.urandom(256))
