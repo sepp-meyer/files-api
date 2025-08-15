@@ -1,0 +1,27 @@
+# VCS
+.git
+.gitignore
+
+# Python Cache
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Lokale Artefakte
+*.log
+*.tmp
+*.tar
+*.env
+
+# Datenbanken & Storage (landen als Volume im Container)
+*.db
+*.sqlite3
+storage/
+fileserver/storage/
+
+# Notebooks / Tests / Beispiel-HTML
+*.ipynb_checkpoints/
+embed_test.html
+embed_temp.html
+test_flow.py
+

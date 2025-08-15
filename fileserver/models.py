@@ -1,6 +1,7 @@
 import datetime as dt
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.exc import IntegrityError
 
 db = SQLAlchemy()
 
@@ -36,11 +37,33 @@ class AdminUser(db.Model):
 
     @classmethod
     def create_or_update(cls, username: str, password: str):
+        """
+        Legt den User an oder aktualisiert sein Passwort.
+        Robust gegen parallele Starts (mehrere Gunicorn-Worker):
+        Falls das INSERT wegen UNIQUE scheitert, wird gerollbackt und ein UPDATE ausgeführt.
+        """
+        pw_hash = generate_password_hash(password)
+
+        # 1) Versuch: gibt es den User schon?
         user = cls.query.filter_by(username=username).first()
-        if not user:
-            user = cls(username=username, password_hash=generate_password_hash(password))
-            db.session.add(user)
-        else:
-            user.password_hash = generate_password_hash(password)
-        db.session.commit()
-        return user
+        if user:
+            user.password_hash = pw_hash
+            db.session.commit()
+            return user
+
+        # 2) Neu anlegen
+        user = cls(username=username, password_hash=pw_hash)
+        db.session.add(user)
+        try:
+            db.session.commit()
+            return user
+        except IntegrityError:
+            # Jemand anders war schneller (z. B. anderer Worker) -> Update
+            db.session.rollback()
+            user = cls.query.filter_by(username=username).first()
+            if not user:
+                # sehr unwahrscheinlich, aber sauber weiterreichen
+                raise
+            user.password_hash = pw_hash
+            db.session.commit()
+            return user
